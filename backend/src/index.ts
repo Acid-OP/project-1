@@ -1,53 +1,40 @@
-import { WebSocket, WebSocketServer } from "ws";
+import express from "express";
+import { JWT_SECRET } from "./config";
+import Jwt from "jsonwebtoken";
+import cors from "cors";
+import { ClientModel } from "./db";
 
-const wss = new WebSocketServer({ port: 8080 });
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-interface ExtendedWebSocket extends WebSocket {
-  roomId?: string;
-  username?: string;
-}
 
-interface User {
-  socket: ExtendedWebSocket;
-  roomId: string;
-  username: string;
-}
-
-let rooms: { [roomId: string]: User[] } = {};
-
-wss.on("connection", (socket: ExtendedWebSocket) => {
-  socket.on("message", (message: string) => {
-    const data = JSON.parse(message);
-    const { type, payload } = data;
-
-    if (type === "join") {
-      const { roomId, username } = payload;
-
-      if (!rooms[roomId]) {
-        rooms[roomId] = [];
-      }
-
-      socket.roomId = roomId;
-      socket.username = username;
-      rooms[roomId].push({ socket, roomId, username });
-
-      console.log(`${username} joined room: ${roomId}`);
+app.post("/api/v1/signup" , async(req,res)=>{
+    const email = req.body.username;
+    const password = req.body.password;
+    try{
+        await ClientModel.create({
+            email: email,
+            password : password
+        })
+        res.json({
+            message: "user signed up"
+        })
+    } catch(e) {
+        res.status(409).json({message : "user already exists"});
     }
-
-    if (type === "chat") {
-      const { message: chatMessage } = payload;
-      const room = rooms[socket.roomId || ""];
-
-      if (room) {
-        const sender = room.find((user) => user.socket === socket);
-        const senderName = sender ? sender.username : "Unknown";
-
-        room.forEach((user) => {
-          user.socket.send(
-            JSON.stringify({ username: senderName, message: chatMessage })
-          );
-        });
-      }
-    }
-  });
 });
+
+app.post("api/v1/signin" , async(req,res) => {
+    const email = req.body.username;
+    const password = req.body.password;
+
+    const existingUser = await ClientModel.findOne({email , password});
+    if(existingUser){
+        const token = Jwt.sign({id:existingUser._id},JWT_SECRET);
+        res.json({token});
+    } else{
+        res.status(403).send({message : "Incorrect Credentials"});
+    }
+});
+

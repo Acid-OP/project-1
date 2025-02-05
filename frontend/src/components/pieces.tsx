@@ -1,4 +1,4 @@
-export     const initialBoard = [
+export const initialBoard = [
         ["b_rook", "b_knight", "b_bishop", "b_queen", "b_king", "b_bishop", "b_knight", "b_rook"], // Black pieces
         ["b_pawn", "b_pawn", "b_pawn", "b_pawn", "b_pawn", "b_pawn", "b_pawn", "b_pawn"], // Black pawns
         [null, null, null, null, null, null, null, null], // Empty rows

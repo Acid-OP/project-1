@@ -1,15 +1,14 @@
-import { Chessboard } from "react-chessboard";
-import { PlayerIcon1 } from "./PlayerIcon1";
-import { PlayerIcon2 } from "./PlayerIcon2";
+
+import { CardComponent } from "./CardComponent";
+import { ChessBoard } from "./ChessBoard";
 
 
 export function ChessCardcomponent() {
     return(
         <div>
-            <div className="flex flex-col justify-center items-center ">
-                <PlayerIcon1/>
-                <Chessboard/>
-                <PlayerIcon2/>
+            <div className="flex justify-evenly h-screen items-center bg-[#302e2b] ">
+                <ChessBoard/>
+                <CardComponent/>
 
             </div>
         </div>

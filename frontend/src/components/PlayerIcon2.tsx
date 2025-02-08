@@ -1,5 +1,5 @@
 import icon from "../Icons/icon.png"
-import icon2 from "../Icons/icon2.png"
+
 
 export function PlayerIcon2() {
     return(

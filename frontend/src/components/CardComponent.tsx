@@ -2,7 +2,7 @@ import pawn from "../Icons/pawn.png";
 
 export function CardComponent() {
     return (
-        <div className="h-[900px] w-[600px] bg-[#262522] rounded-sm m-4 relative overflow-hidden">
+        <div className="h-[900px] w-[600px] bg-[#262522] rounded-lg m-4 relative overflow-hidden">
             {/* Top curved section */}
             <div className="w-full h-[200px] bg-[#21201d] top-0 left-0 text-white text-4xl font-black flex items-center justify-center relative"
                  style={{ clipPath: "ellipse(100% 80% at 50% 0%)" }}>

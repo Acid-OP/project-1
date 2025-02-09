@@ -36,7 +36,7 @@ export function Icon({src , alt}:{src:string ; alt?:string}){
 export function Playername({text}:{text:string}){
     return(
         <div>
-            <span className="text-white font-medium text-lg pl-4 ">{text}</span>
+            <span className="text-white font-medium text-lg ">{text}</span>
         </div>
     )   
 }

@@ -2,51 +2,69 @@ import { WebSocket, WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({ port: 8080 });
 
-interface ExtendedWebSocket extends WebSocket {
+interface WebSocketMessage {
+  type: "joinRoom" | "move" | "chat" | "gameStart";
   roomId?: string;
   username?: string;
+  moveData?: {
+    from: string;
+    to: string;
+  };
+  message?: string;
 }
 
-interface User {
-  socket: ExtendedWebSocket;
-  roomId: string;
-  username: string;
+type Room = {
+  players: WebSocket[];
+};
+
+function broadcast(roomId: string, message: WebSocketMessage) {
+  if (rooms[roomId]) {
+    rooms[roomId].players.forEach((player) => {
+      player.send(JSON.stringify(message));
+    });
+  }
 }
 
-let rooms: { [roomId: string]: User[] } = {};
+const rooms: Record<string, Room> = {};
 
-wss.on("connection", (socket: ExtendedWebSocket) => {
-  socket.on("message", (message: string) => {
-    const data = JSON.parse(message);
-    const { type, payload } = data;
+wss.on("connection", (ws: WebSocket) => {
+  console.log("🔌 New WebSocket connection");
 
-    if (type === "join") {
-      const { roomId, username } = payload;
+  ws.on("message", (message: string) => {
+    try {
+      const data: WebSocketMessage = JSON.parse(message);
 
-      if (!rooms[roomId]) {
-        rooms[roomId] = [];
+      if (data.type === "joinRoom" && data.roomId) {
+        const { roomId } = data;
+
+        if (!rooms[roomId]) {
+          rooms[roomId] = { players: [] };
+        }
+
+        if (rooms[roomId].players.length < 2) {
+          rooms[roomId].players.push(ws);
+          console.log(`👤 Player joined room: ${roomId}`);
+
+          if (rooms[roomId].players.length === 2) {
+            broadcast(roomId, { type: "gameStart", message: "Game is starting!" });
+          }
+        } else {
+          ws.send(JSON.stringify({ type: "roomFull", message: "Room is full!" }));
+        }
       }
-
-      socket.roomId = roomId;
-      socket.username = username;
-      rooms[roomId].push({ socket, roomId, username });
-
-      console.log(`${username} joined room: ${roomId}`);
+    } catch (err) {
+      console.error("Error parsing message:", err);
     }
+  });
 
-    if (type === "chat") {
-      const { message: chatMessage } = payload;
-      const room = rooms[socket.roomId || ""];
+  ws.on("close", () => {
+    console.log("❌ WebSocket disconnected");
 
-      if (room) {
-        const sender = room.find((user) => user.socket === socket);
-        const senderName = sender ? sender.username : "Unknown";
+    for (const roomId in rooms) {
+      rooms[roomId].players = rooms[roomId].players.filter((player) => player !== ws);
 
-        room.forEach((user) => {
-          user.socket.send(
-            JSON.stringify({ username: senderName, message: chatMessage })
-          );
-        });
+      if (rooms[roomId].players.length === 0) {
+        delete rooms[roomId];
       }
     }
   });

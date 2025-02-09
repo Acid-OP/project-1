@@ -1,7 +1,5 @@
-
 import { CardComponent } from "./CardComponent";
 import { ChessBoard } from "./ChessBoard";
-
 
 export function ChessCardcomponent() {
     return(

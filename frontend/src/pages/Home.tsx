@@ -1,64 +1,57 @@
 import "./Home.css";
-import { useState, useEffect } from 'react';
-import { Chessboard } from 'react-chessboard';
-import { Chess } from 'chess.js';
+import { useState, useEffect } from "react";
+import { Chess } from "chess.js";
+import { Chessboard } from "react-chessboard";
+
+type Square = `${"a" | "b" | "c" | "d" | "e" | "f" | "g" | "h"}${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8}`;
+type Move = {
+  from: Square;
+  to: Square;
+  promotion?: string;
+};
 
 export function Home() {
-  const [game, setGame] = useState(new Chess());
-  const [winner, setWinner] = useState(null);
-  const [gameOver, setGameOver] = useState(false);
-  const [highlightedSquares, setHighlightedSquares] = useState({});
-  const [selectedSquare, setSelectedSquare] = useState(null); 
-  // Let's perform a function on the game state
-  function safeGameMutate(modify) {
+  const [game, setGame] = useState<InstanceType<typeof Chess>>(new Chess());
+  const [winner, setWinner] = useState<string | null>(null);
+  const [gameOver, setGameOver] = useState<boolean>(false);
+  const [highlightedSquares, setHighlightedSquares] = useState<Partial<Record<Square, { backgroundColor: string }>>>({});
+  const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
+
+  function safeGameMutate(modify: (game: InstanceType<typeof Chess>) => void) {
     setGame((g) => {
-      const update = { ...g };
+      const update = new Chess(g.fen());
       modify(update);
       return update;
     });
   }
 
-  // Movement of computer
   function makeRandomMove() {
-    const possibleMove = game.moves();
-
-    // exit if the game is over
-    if (game.game_over() || game.in_draw() || possibleMove.length === 0) {
+    const possibleMoves = game.moves();
+    if (game.game_over() || game.in_draw() || possibleMoves.length === 0) {
       setGameOver(true);
-      const winner = game.turn() === 'w' ? 'Black' : 'White';
-      setWinner(winner);
+      setWinner(game.turn() === "w" ? "Black" : "White");
       return;
     }
-
-    // select random move
-    const randomIndex = Math.floor(Math.random() * possibleMove.length);
-    // play random move
+    const randomIndex = Math.floor(Math.random() * possibleMoves.length);
     safeGameMutate((game) => {
-      game.move(possibleMove[randomIndex]);
+      game.move(possibleMoves[randomIndex]);
     });
   }
 
-  // Perform an action when a piece is dropped by a user
-  function onDrop(source, target) {
+  function onDrop(source: Square, target: Square): boolean {
     if (gameOver) return false;
 
-    let move = null;
+    let move: Move | null = null;
     safeGameMutate((game) => {
-      move = game.move({
-        from: source,
-        to: target,
-        promotion: 'q',
-      });
+      move = game.move({ from: source, to: target, promotion: "q" });
     });
-    // illegal move
-    if (move === null) return false;
-    setHighlightedSquares({}); // Remove highlights after the move
-    // valid move
+
+    if (!move) return false;
+    setHighlightedSquares({});
     setTimeout(makeRandomMove, 200);
     return true;
   }
 
-  // Reset the game
   function restartGame() {
     setGame(new Chess());
     setGameOver(false);
@@ -66,59 +59,50 @@ export function Home() {
     setHighlightedSquares({});
   }
 
-  // Listen for Enter key press to restart the game
   useEffect(() => {
-    function handleKeyPress(event) {
-      if (event.key === 'Enter') {
+    function handleKeyPress(event: KeyboardEvent) {
+      if (event.key === "Enter") {
         restartGame();
       }
     }
-    window.addEventListener('keydown', handleKeyPress);
+    window.addEventListener("keydown", handleKeyPress);
     return () => {
-      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener("keydown", handleKeyPress);
     };
   }, []);
 
-  function onPieceClick(square) {
+  function onPieceClick(square: Square) {
     if (selectedSquare) {
-      // If a square is selected, try to move the piece
       const move = game.move({
         from: selectedSquare,
         to: square,
-        promotion: 'q', // Automatically promote pawns to queens
+        promotion: "q",
       });
-
-      if (move === null) return; // Invalid move
-
-      // If the move is valid, reset selectedSquare and remove highlights
+      if (!move) return;
       setSelectedSquare(null);
       setHighlightedSquares({});
-      setTimeout(makeRandomMove, 200); // Trigger the computer's move
+      setTimeout(makeRandomMove, 200);
     } else {
-      // If no square is selected, select this one
-      const moves = game.moves({ square, verbose: true });
+      const moves = game.moves({ square, verbose: true }) as Move[];
       const squares = moves.map((move) => move.to);
-      
-      // Highlight possible moves
-      const newHighlightStyles = {};
-      squares.forEach((square) => {
-        newHighlightStyles[square] = { backgroundColor: 'rgba(0, 255, 0, 0.5)' };
+      const newHighlightStyles: Partial<Record<Square, { backgroundColor: string }>> = {};
+      squares.forEach((sq) => {
+        newHighlightStyles[sq] = { backgroundColor: "rgba(0, 255, 0, 0.5)" };
       });
       setHighlightedSquares(newHighlightStyles);
-      setSelectedSquare(square); // Track the selected square
+      setSelectedSquare(square);
     }
-
   }
+
   return (
     <div className="app">
-      <div className="header">
-        Chess
-        <div className="game-info">
-          <h1>GeeksforGeeks Chess Game</h1>
-        </div>
-      </div>
       <div className="chessboard-container">
-        <Chessboard position={game.fen()} onPieceDrop={onDrop} onSquareClick={onPieceClick} customSquareStyles={highlightedSquares}/>
+        <Chessboard
+          position={game.fen()}
+          onPieceDrop={onDrop}
+          onSquareClick={onPieceClick}
+          customSquareStyles={highlightedSquares}
+        />
         {gameOver && (
           <div className="game-over">
             <p>Game Over</p>
@@ -130,5 +114,3 @@ export function Home() {
     </div>
   );
 }
-
-

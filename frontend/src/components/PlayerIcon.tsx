@@ -14,7 +14,7 @@ const variantClasses = {
 
 export function PlayerIcon({ startIcon, playername, variant }: Playericon) {
     return(
-        <div className="flex">
+        <div className="flex ">
         <div className={`p-2 rounded-lg flex items-center ${variantClasses[variant]}`}>
             {startIcon}
         </div>

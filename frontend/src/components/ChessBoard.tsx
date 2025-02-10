@@ -4,7 +4,7 @@ import icon from "../Icons/icon.png";
 
 export function ChessBoard() {
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col gap-6 items-start">
       {/* Opponent */}
       <div className="flex justify-center">
         <PlayerIcon

@@ -7,7 +7,6 @@ import robot from "../Icons/robot.png";
 import link from "../Icons/link.png";
 import twitter from "../Icons/twitter.png";
 import instagram from "../Icons/instagram.png";
-
 import { CardIcon, CardText } from "./CardComponentItems";
 import { CardComponentSocials, SocialIcon } from "./CardComponentSocials";
 

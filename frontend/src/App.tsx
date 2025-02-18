@@ -1,17 +1,11 @@
-
+import { Game } from "./pages/Game";
 import { Landing } from "./pages/Landing";
-
-import icon from "./Icons/icon.png"
-import { PlayerIcon , Icon , Playername } from "./components/PlayerIcon";
-import { Home } from "./pages/Home";
-
-
 
 export default function App() {
   return (
    
 
-    <Landing/>
+    <Game/>
     // <BrowserRouter>
     // <Routes>
     //   <Route path= "/signup" element={<Signup/>}></Route>

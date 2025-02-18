@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState  , useEffect} from "react";
 import { Chessboard, Square } from "react-chessboard";
 import { Chess, Move } from 'chess.js';
 
@@ -6,10 +6,27 @@ export function Game() {
   const [game, setGame] = useState(new Chess());
   const [gameOver, setGameOver] = useState(false);
   const [winner, setWinner] = useState<String | null>(null);
+  const [selectedSquare , setSelectedSquare] = useState<Square | null>(null);
+const [highlightedSquares, setHighlightedSquares] = useState<Partial<Record<Square, { backgroundColor: string }>>>({});
+  
 
   function restartGame() {
     setGame(new Chess());
+    setGameOver(false);
+    setWinner(null);
+    setHighlightedSquares({});
   }
+    useEffect(() => {
+      function handleKeyPress(event: KeyboardEvent) {
+        if (event.key === "Enter") {
+          restartGame();
+        }
+      }
+      window.addEventListener("keydown", handleKeyPress);
+      return () => {
+        window.removeEventListener("keydown", handleKeyPress);
+      };
+    }, []);
 
   function safegame(modify: (game: InstanceType<typeof Chess>) => void) {
     setGame((g: InstanceType<typeof Chess>) => {
@@ -49,14 +66,44 @@ export function Game() {
     });
 
     if (move == null) return false;
+    setHighlightedSquares({});
     setTimeout(makeRandomMove, 200);
     return true;
   }
 
+  function onPieceClick(square: Square) {
+    if (selectedSquare) {
+      const move = game.move({
+        from: selectedSquare,
+        to: square,
+        promotion: "q",
+      });
+      if (!move) return;
+      setSelectedSquare(null);
+      setHighlightedSquares({});
+      setTimeout(makeRandomMove, 200);
+    } else {
+      const moves = game.moves({ square, verbose: true }) as Move[];
+      const squares = moves.map((move) => move.to);
+      const newHighlightStyles: Partial<Record<Square, { backgroundColor: string }>> = {};
+      squares.forEach((sq) => {
+        newHighlightStyles[sq] = { backgroundColor: "rgba(0, 255, 0, 0.5)" };
+      });
+      setHighlightedSquares(newHighlightStyles);
+      setSelectedSquare(square);
+    }
+  }
   return (
     <div>
       <div>
-        <Chessboard position={game.fen()} onPieceDrop={onDrop} />
+        <Chessboard position={game.fen()} onPieceDrop={onDrop} onSquareClick={onPieceClick} customSquareStyles={highlightedSquares}/>
+        {gameOver && (
+          <div className="game-over">
+            <p>Game Over</p>
+            <p>Winner: {winner}</p>
+            <p>Press Enter to restart</p>
+          </div>
+        )}
       </div>
     </div>
   );
